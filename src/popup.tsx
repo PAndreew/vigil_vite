@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import './index.css';
+// import './index.css';
 
 const Popup = () => {
     const [dlpEnabled, setDlpEnabled] = React.useState(true);

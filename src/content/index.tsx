@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RedactionModal } from '../components/Modal';
-import './index.css';
+// import './index.css';
 
 let root: ReactDOM.Root | null = null;
 let modalContainer: HTMLDivElement | null = null;

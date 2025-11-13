@@ -19,7 +19,8 @@
         "https://www.deepseek.com/*",
         "https://chat.qwen.ai/*"
         ],
-      "js": ["src/content/index.tsx"]
+      "js": ["src/content/index.tsx"],
+      "css": ["assets/content-scripts.css"]
     }
   ],
   "action": {
