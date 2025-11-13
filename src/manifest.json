@@ -3,14 +3,20 @@
   "name": "Vigil - Privacy-First DLP",
   "version": "1.2.0",
   "description": "Prevents leakage of sensitive data through AI chatbots by analyzing pasted content locally.",
-  "permissions": ["storage", "activeTab"],
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
   "background": {
-    "service_worker": "src/background.ts",
+    "service_worker": "service-worker-loader.js",
     "type": "module"
   },
   "content_scripts": [
     {
-        "matches": [
+      "js": [
+        "assets/index.tsx-loader-BGenlGja.js"
+      ],
+      "matches": [
         "https://chat.openai.com/*",
         "https://aistudio.google.com/*",
         "https://claude.ai/*",
@@ -18,9 +24,7 @@
         "https://grok.com/*",
         "https://www.deepseek.com/*",
         "https://chat.qwen.ai/*"
-        ],
-      "js": ["src/content/index.tsx"],
-      "css": ["assets/content-scripts.css"]
+      ]
     }
   ],
   "action": {
@@ -33,16 +37,21 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["assets/*"],
       "matches": [
-        "https://chat.openai.com/*",
         "https://aistudio.google.com/*",
+        "https://chat.openai.com/*",
+        "https://chat.qwen.ai/*",
         "https://claude.ai/*",
-        "https://www.perplexity.ai/*",
         "https://grok.com/*",
         "https://www.deepseek.com/*",
-        "https://chat.qwen.ai/*"
-        ]
+        "https://www.perplexity.ai/*"
+      ],
+      "resources": [
+        "assets/*",
+        "assets/label-CS5Hxila.js",
+        "assets/index.tsx-fitZs8fh.js"
+      ],
+      "use_dynamic_url": false
     }
   ]
 }
