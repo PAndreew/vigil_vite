@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Vigil - Privacy-First DLP",
+  "version": "1.2.0",
+  "description": "Prevents leakage of sensitive data through AI chatbots by analyzing pasted content locally.",
+  "permissions": ["storage", "activeTab"],
+  "background": {
+    "service_worker": "src/background.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+        "matches": [
+        "https://chat.openai.com/*",
+        "https://aistudio.google.com/*",
+        "https://claude.ai/*",
+        "https://www.perplexity.ai/*",
+        "https://grok.com/*",
+        "https://www.deepseek.com/*",
+        "https://chat.qwen.ai/*"
+        ],
+      "js": ["src/content/index.tsx"]
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup.html"
+  },
+  "icons": {
+    "16": "public/icons/icon16.png",
+    "48": "public/icons/icon48.png",
+    "128": "public/icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/*"],
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://aistudio.google.com/*",
+        "https://claude.ai/*",
+        "https://www.perplexity.ai/*",
+        "https://grok.com/*",
+        "https://www.deepseek.com/*",
+        "https://chat.qwen.ai/*"
+        ]
+    }
+  ]
+}
