@@ -3,32 +3,31 @@ import ReactDOM from 'react-dom/client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, Trash2 } from 'lucide-react';
-
-// ✅ SAFE TO USE HERE: This is a standard page, so Vite handles this import correctly.
+import { Shield, ShieldCheck } from 'lucide-react';
 import './index.css';
 
 const Popup = () => {
     const [dlpEnabled, setDlpEnabled] = useState(true);
-    const [whitelistedDomains, setWhitelistedDomains] = useState<string[]>([]);
+    const [protectedDomains, setProtectedDomains] = useState<string[]>([]); // Renamed state
     const [newDomain, setNewDomain] = useState('');
     const [currentTabDomain, setCurrentTabDomain] = useState('');
 
     useEffect(() => {
-        chrome.storage.local.get(['dlpEnabled', 'whitelistedDomains'], (result) => {
+        // Fetch settings from storage, now looking for 'protectedDomains'
+        chrome.storage.local.get(['dlpEnabled', 'protectedDomains'], (result) => {
             setDlpEnabled(result.dlpEnabled !== false);
-            setWhitelistedDomains(result.whitelistedDomains || []);
+            setProtectedDomains(result.protectedDomains || []);
         });
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs[0]?.url) {
+            if (tabs[0] && tabs[0].url) {
                 try {
                     const url = new URL(tabs[0].url);
                     setCurrentTabDomain(url.hostname);
                 } catch (e) {
-                    // Ignore errors
+                    console.error("Invalid URL:", tabs[0].url);
                 }
             }
         });
@@ -41,95 +40,67 @@ const Popup = () => {
 
     const handleAddDomain = () => {
         const domainToAdd = newDomain.trim() || currentTabDomain;
-        if (domainToAdd && !whitelistedDomains.includes(domainToAdd)) {
-            const updatedDomains = [...whitelistedDomains, domainToAdd].sort();
-            setWhitelistedDomains(updatedDomains);
-            chrome.storage.local.set({ whitelistedDomains: updatedDomains });
+        if (domainToAdd && !protectedDomains.includes(domainToAdd)) {
+            const updatedDomains = [...protectedDomains, domainToAdd].sort();
+            setProtectedDomains(updatedDomains);
+            // Save to storage under the key 'protectedDomains'
+            chrome.storage.local.set({ protectedDomains: updatedDomains });
             setNewDomain('');
         }
     };
 
     const handleRemoveDomain = (domainToRemove: string) => {
-        const updatedDomains = whitelistedDomains.filter(d => d !== domainToRemove);
-        setWhitelistedDomains(updatedDomains);
-        chrome.storage.local.set({ whitelistedDomains: updatedDomains });
+        const updatedDomains = protectedDomains.filter(d => d !== domainToRemove);
+        setProtectedDomains(updatedDomains);
+        chrome.storage.local.set({ protectedDomains: updatedDomains });
     };
 
     return (
-        <div className="w-96 min-h-screen bg-slate-950 text-slate-50 p-4 font-sans border-l border-slate-800">
-            <header className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800">
-                <div className="p-2 bg-red-900/30 rounded-lg border border-red-500/20">
-                    <ShieldCheck className="h-6 w-6 text-red-500" />
-                </div>
-                <div>
-                    <h1 className="text-lg font-bold tracking-tight">Privacy Shield</h1>
-                    <p className="text-xs text-slate-400">Data Loss Prevention</p>
-                </div>
-            </header>
-
-            <Card className="bg-slate-900 border-slate-800 mb-4 shadow-lg">
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-slate-200">Global Protection</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-between p-3 bg-slate-950 rounded-lg border border-slate-800">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="enabledToggle" className="text-slate-200 font-medium">Monitor Paste</Label>
-                            <p className="text-xs text-slate-500">Scan clipboard content</p>
-                        </div>
-                        <Switch
-                            id="enabledToggle"
-                            checked={dlpEnabled}
-                            onCheckedChange={handleToggle}
-                            className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-slate-700"
-                        />
+        <div className="w-96 p-4 bg-slate-900 text-white font-sans">
+            <div className="flex items-center gap-3 mb-4">
+                <Shield className="h-6 w-6 text-blue-400" />
+                <h1 className="text-xl font-bold">DLP Protection</h1>
+            </div>
+            <Card className="bg-slate-800 border-slate-700 mb-4">
+                <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="enabledToggle" className="font-semibold">Protection Status</Label>
+                        <Switch id="enabledToggle" checked={dlpEnabled} onCheckedChange={handleToggle} />
                     </div>
                 </CardContent>
             </Card>
-
-            <Card className="bg-slate-900 border-slate-800 shadow-lg">
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-slate-200">Whitelist</CardTitle>
-                    <CardDescription className="text-xs text-slate-500">Skip scanning on these domains</CardDescription>
+            <Card className="bg-slate-800 border-slate-700">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-slate-400" />
+                        Protected Site List
+                    </CardTitle>
+                    <CardDescription>Protection is ONLY active on these sites.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex gap-2 mb-3">
+                    <div className="max-h-40 overflow-y-auto mb-4 border border-slate-700 rounded-lg p-2 space-y-1">
+                        {protectedDomains.length > 0 ? (
+                            protectedDomains.map(domain => (
+                                <div key={domain} className="flex justify-between items-center p-1.5 bg-slate-700/50 rounded text-sm">
+                                    <span>{domain}</span>
+                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-slate-400 hover:text-white" onClick={() => handleRemoveDomain(domain)}>
+                                        &times;
+                                    </Button>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-slate-500 text-center text-sm py-4">No sites on the protection list.</p>
+                        )}
+                    </div>
+                    <div className="flex gap-2">
                         <Input
                             type="text"
                             value={newDomain}
                             onChange={(e) => setNewDomain(e.target.value)}
-                            placeholder={currentTabDomain || "example.com"}
-                            className="bg-slate-950 border-slate-800 focus-visible:ring-red-500/50 placeholder:text-slate-600 h-9 text-sm"
+                            placeholder={currentTabDomain || "e.g., example.com"}
+                            className="bg-slate-700 border-slate-600 focus:ring-blue-500 focus:ring-1"
                         />
-                        <Button 
-                            size="sm"
-                            className="bg-red-600 hover:bg-red-700 text-white h-9 px-3" 
-                            onClick={handleAddDomain}
-                        >
-                            Add
-                        </Button>
-                    </div>
-                    
-                    <div className="rounded-lg border border-slate-800 bg-slate-950 overflow-hidden">
-                        <div className="max-h-[140px] overflow-y-auto p-1 space-y-1 custom-scrollbar">
-                            {whitelistedDomains.length > 0 ? (
-                                whitelistedDomains.map(domain => (
-                                    <div key={domain} className="group flex justify-between items-center text-sm px-3 py-2 rounded hover:bg-slate-900 transition-colors">
-                                        <span className="text-slate-300 font-mono text-xs truncate max-w-[180px]">{domain}</span>
-                                        <button 
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-950/30 rounded"
-                                            onClick={() => handleRemoveDomain(domain)}
-                                        >
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="flex flex-col items-center justify-center py-6 text-slate-500">
-                                    <span className="text-xs italic">No domains whitelisted</span>
-                                </div>
-                            )}
-                        </div>
+                        <Button onClick={handleAddDomain} className="bg-blue-600 hover:bg-blue-700 text-white">Add Site</Button>
                     </div>
                 </CardContent>
             </Card>
