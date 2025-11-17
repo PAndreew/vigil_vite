@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Email Address",
+    "regex": "\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b",
+    "dummyValue": "[REDACTED EMAIL]"
+  },
+  {
+    "name": "Phone Number (US)",
+    "regex": "\\b(?:\\+?1[\\s.-]?)?\\(?([2-9][0-8][0-9])\\)?[\\s.-]?([2-9][0-9]{2})[\\s.-]?([0-9]{4})\\b",
+    "dummyValue": "[REDACTED PHONE]"
+  },
+  {
+    "name": "Credit Card Number",
+    "regex": "\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|6(?:011|5[0-9]{2})[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\\d{3})\\d{11})\\b",
+    "dummyValue": "[REDACTED CC#]"
+  },
+  {
+    "name": "Social Security Number",
+    "regex": "\\b(?!000|666)[0-8][0-9]{2}-(?!00)[0-9]{2}-(?!0000)[0-9]{4}\\b",
+    "dummyValue": "[REDACTED SSN]"
+  },
+  {
+    "name": "IPv4 Address",
+    "regex": "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b",
+    "dummyValue": "[REDACTED IP]"
+  },
+  {
+    "name": "UUID",
+    "regex": "\\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\b",
+    "dummyValue": "[REDACTED UUID]"
+  }
+]
