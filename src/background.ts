@@ -71,12 +71,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 // --- MESSAGE LISTENER ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'analyzeForRedaction') {
-        handleAnalysis(message, sender)
-            .then(sendResponse)
-            .catch((error) => {
-                console.error('[DLP Background] CRITICAL ERROR in handleAnalysis:', error);
-                sendResponse({ matches: [] });
-            });
+        handleAnalysis(message, sender).then(sendResponse);
         return true;
     }
 });

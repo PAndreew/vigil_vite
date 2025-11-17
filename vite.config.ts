@@ -4,13 +4,20 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { crx } from '@crxjs/vite-plugin'
 import manifest from './src/manifest.json'
+import { resolve } from 'path'
 
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), crx({ manifest }),],
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        popup: resolve(__dirname, 'src/popup.html'),
+        iframe: resolve(__dirname, 'src/iframe/iframe.html'),
+      },
+    },
   },
   resolve: {
     alias: {
