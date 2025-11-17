@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ShieldAlert, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import LogoIcon from '../assets/vigil_logo.svg?react'; 
 
 // This is the key for style encapsulation: The component imports its own styles as a string.
 import modalStyles from '../index.css?inline';
@@ -83,7 +84,7 @@ export const RedactionModal: React.FC<ModalProps> = ({ originalText, matches, on
             <Card className="bg-slate-950 border-purple-500/30 text-white shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <div className="flex items-center gap-3">
-                        <ShieldAlert className="h-5 w-5 text-purple-400" />
+                        <LogoIcon className="h-8 w-8 text-purple-400" />
                         <h2 className="text-lg font-semibold">Sensitive Data Detected</h2>
                     </div>
                     {/* The onClick handlers now correctly call the memoized callbacks */}
@@ -93,30 +94,26 @@ export const RedactionModal: React.FC<ModalProps> = ({ originalText, matches, on
                 </CardHeader>
                 <CardContent className="py-2 max-h-[60vh] overflow-y-auto pr-3 space-y-2">
                      {matches.map((match, index) => (
-                        <div key={index} className="bg-slate-900/60 border border-purple-500/20 rounded-lg p-3 flex justify-between items-center">
+                        <div key={index} className="bg-slate-900/60 border border-red-300/20 rounded-lg p-3 flex justify-between items-center">
                             <div className="overflow-hidden mr-4">
                                 <p className="font-semibold text-sm text-slate-200">{match.name}</p>
                                 <code className="text-xs text-slate-400 bg-slate-950/70 p-1 rounded block truncate">{match.value}</code>
                             </div>
                             <div className="flex items-center space-x-2 flex-shrink-0">
-                                <Label htmlFor={`redact-${index}`} className="text-purple-400 font-bold text-xs cursor-pointer">REDACT</Label>
-                                <Switch
-                                    id={`redact-${index}`}
-                                    checked={redactionState[index]}
-                                    onCheckedChange={(checked) => setRedactionState(prev => ({ ...prev, [index]: checked }))}
-                                />
+                                <Label htmlFor={`redact-${index}`} className="text-red-400 font-bold text-xs cursor-pointer">REDACT</Label>
+                                <Switch id={`redact-${index}`} checked={redactionState[index]} onCheckedChange={(checked) => setRedactionState(prev => ({...prev, [index]: checked}))} className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-slate-600"/>
                             </div>
                         </div>
                     ))}
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-4 pt-4">
                     <div className="flex justify-between w-full">
-                        <Button variant="outline" className="border-purple-500/50 text-purple-300 hover:bg-purple-900/30 hover:text-purple-200 rounded-full px-6" onClick={handlePasteOriginal}>
-                            Paste Original
+                        <Button variant="ghost" className="hover:bg-slate-800 rounded-full px-4" onClick={handleClose}>
+                            Cancel
                         </Button>
                         <div className="flex gap-2">
-                            <Button variant="ghost" className="hover:bg-slate-800 rounded-full px-4" onClick={handleClose}>
-                                Cancel
+                            <Button variant="outline" className="border-purple-500/50 text-purple-300 hover:bg-purple-900/30 hover:text-purple-200 rounded-full px-6" onClick={handlePasteOriginal}>
+                                Paste Original
                             </Button>
                             <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6" onClick={handlePasteModified}>
                                 Paste Redacted

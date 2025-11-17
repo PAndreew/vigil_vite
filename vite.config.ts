@@ -5,11 +5,12 @@ import { defineConfig } from "vite"
 import { crx } from '@crxjs/vite-plugin'
 import manifest from './src/manifest.json'
 import { resolve } from 'path'
+import svgr from 'vite-plugin-svgr';
 
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), crx({ manifest }),],
+  plugins: [react(), tailwindcss(), crx({ manifest }), svgr()],
   build: {
     outDir: 'dist',
     rollupOptions: {
