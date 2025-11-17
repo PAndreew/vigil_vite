@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
@@ -10,36 +10,30 @@ import LogoIcon from '../assets/vigil_logo.svg?react';
 import modalStyles from '../index.css?inline';
 
 // --- Type Definitions ---
-type Match = {
-    name: string;
-    value: string;
-    dummyValue: string;
-};
-
+type Match = { name: string; value: string; dummyValue: string; };
 type ModalProps = {
     originalText: string;
     matches: Match[];
     onDecision: (action: string, text?: string) => void;
 };
+// This defines the functions that the parent component can call on this component
+export type RedactionModalRef = {
+    triggerPasteModified: () => void;
+    triggerPasteOriginal: () => void;
+    triggerCancel: () => void;
+};
 
-/**
- * A self-contained, stylistically isolated UI component for displaying redaction choices.
- * It's designed to be rendered inside a sandboxed environment like an iframe.
- */
-export const RedactionModal: React.FC<ModalProps> = ({ originalText, matches, onDecision }) => {
-
-    // --- State ---
+// Wrap the component in forwardRef to accept a ref from its parent
+export const RedactionModal = forwardRef<RedactionModalRef, ModalProps>(
+    ({ originalText, matches, onDecision }, ref) => {
+    
     const [redactionState, setRedactionState] = useState<Record<number, boolean>>(
-         // Initialize all redaction toggles to 'true' (checked) by default
          () => matches.reduce((acc, _, index) => ({ ...acc, [index]: true }), {})
     );
 
     // --- Callbacks ---
-    // These functions are memoized with useCallback for performance and to ensure
-    // they have a stable identity for the useEffect dependency array.
-
     const handleClose = useCallback(() => onDecision('cancel'), [onDecision]);
-
+    const handlePasteOriginal = useCallback(() => onDecision('pasteOriginal', originalText), [originalText, onDecision]);
     const handlePasteModified = useCallback(() => {
         let modifiedText = originalText;
         matches.forEach((match, index) => {
@@ -51,28 +45,12 @@ export const RedactionModal: React.FC<ModalProps> = ({ originalText, matches, on
         onDecision('pasteModified', modifiedText);
     }, [originalText, matches, redactionState, onDecision]);
 
-    const handlePasteOriginal = useCallback(() => {
-        onDecision('pasteOriginal', originalText);
-    }, [originalText, onDecision]);
-
-
-    // --- Side Effects ---
-    // This effect attaches global keyboard shortcuts when the modal is visible.
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.altKey) {
-                if (event.key.toLowerCase() === 'r') { event.preventDefault(); handlePasteModified(); }
-                else if (event.key.toLowerCase() === 'o') { event.preventDefault(); handlePasteOriginal(); }
-            } else if (event.key === 'Escape') {
-                event.preventDefault();
-                handleClose();
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-        // Cleanup function: remove the listener when the component is unmounted.
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [handlePasteModified, handlePasteOriginal, handleClose]);
+    // --- THE FIX: Expose the callback functions to the parent component ---
+    useImperativeHandle(ref, () => ({
+        triggerPasteModified: handlePasteModified,
+        triggerPasteOriginal: handlePasteOriginal,
+        triggerCancel: handleClose
+    }));
 
 
     // --- Render ---
@@ -129,4 +107,4 @@ export const RedactionModal: React.FC<ModalProps> = ({ originalText, matches, on
             </Card>
         </div>
     );
-};
+});

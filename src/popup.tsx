@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Shield, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
+import LogoIcon from './assets/vigil_logo.svg?react'; 
 import './index.css';
 
 const Popup = () => {
@@ -58,8 +59,8 @@ const Popup = () => {
     return (
         <div className="w-96 p-4 bg-slate-900 text-white font-sans">
             <div className="flex items-center gap-3 mb-4">
-                <Shield className="h-6 w-6 text-blue-400" />
-                <h1 className="text-xl font-bold">DLP Protection</h1>
+                <LogoIcon className="h-8 w-8" />
+                <h1 className="text-xl font-bold">Vigil - DLP Protection</h1>
             </div>
             <Card className="bg-slate-800 border-slate-700 mb-4">
                 <CardContent className="p-4">

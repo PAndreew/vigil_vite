@@ -3,7 +3,25 @@
 let activeIframe: HTMLIFrameElement | null = null;
 let currentTargetElement: HTMLElement | null = null;
 
-// This function creates and shows the UI. (No changes here)
+// This is the hotkey listener. It is only active when the iframe is visible.
+const handleGlobalKeyDown = (event: KeyboardEvent) => {
+    if (!activeIframe) return; // Do nothing if the modal isn't open
+
+    if (event.altKey) {
+        if (event.key.toLowerCase() === 'r') {
+            event.preventDefault();
+            activeIframe.contentWindow?.postMessage({ type: 'dlp-hotkey', action: 'pasteModified' }, '*');
+        } else if (event.key.toLowerCase() === 'o') {
+            event.preventDefault();
+            activeIframe.contentWindow?.postMessage({ type: 'dlp-hotkey', action: 'pasteOriginal' }, '*');
+        }
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        activeIframe.contentWindow?.postMessage({ type: 'dlp-hotkey', action: 'cancel' }, '*');
+    }
+};
+
+// Creates the iframe and activates the hotkey listener
 function showRedactionUI(originalText: string, matches: any[], targetElement: HTMLElement) {
     if (activeIframe) activeIframe.remove();
     currentTargetElement = targetElement;
@@ -11,27 +29,19 @@ function showRedactionUI(originalText: string, matches: any[], targetElement: HT
     activeIframe = document.createElement('iframe');
     activeIframe.src = chrome.runtime.getURL('src/iframe/iframe.html');
     activeIframe.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border: none;
-        z-index: 2147483647;
-        background: transparent;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        border: none; z-index: 2147483647; background: transparent;
     `;
     document.body.appendChild(activeIframe);
 
     activeIframe.onload = () => {
-        activeIframe?.contentWindow?.postMessage({
-            type: 'dlp-data',
-            originalText,
-            matches
-        }, '*');
+        activeIframe?.contentWindow?.postMessage({ type: 'dlp-data', originalText, matches }, '*');
+        // Activate listener now that UI is visible
+        document.addEventListener('keydown', handleGlobalKeyDown);
     };
 }
 
-// This function manually inserts text into an input/textarea. (No changes here)
+// Manually inserts text into the target element
 function pasteText(text: string, targetElement: any) {
     if (!targetElement) return;
     if (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA') {
@@ -45,8 +55,7 @@ function pasteText(text: string, targetElement: any) {
     }
 }
 
-
-// Listen for the decision coming back from the iframe. (No changes here)
+// Listens for the decision from the iframe and deactivates the hotkey listener
 window.addEventListener('message', (event) => {
     const data = event.data;
     if (data.type === 'dlp-decision') {
@@ -58,12 +67,13 @@ window.addEventListener('message', (event) => {
             activeIframe = null;
         }
         currentTargetElement = null;
+        // Deactivate listener now that UI is gone
+        document.removeEventListener('keydown', handleGlobalKeyDown);
     }
 });
 
-
 // =======================================================================
-// THE FIX: The Paste Listener Logic is Completely Rewritten
+// THE CORRECTED PASTE LISTENER
 // =======================================================================
 document.addEventListener('paste', (event) => {
     const pastedText = event.clipboardData?.getData('text/plain');
@@ -71,30 +81,28 @@ document.addEventListener('paste', (event) => {
     const isEditable = targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA' || targetElement.isContentEditable;
 
     if (!isEditable || !pastedText) {
-        return; // Do nothing if it's not a place we can paste text.
+        return;
     }
 
-    // --- STEP 1: STOP THE BROWSER'S DEFAULT PASTE ACTION IMMEDIATELY ---
-    // This is the most critical change. We take control of the event right away.
+    // STEP 1: Always stop the browser's default paste action.
     event.preventDefault();
     event.stopPropagation();
 
-    // --- STEP 2: ANALYZE THE TEXT ASYNCHRONOUSLY ---
+    // STEP 2: Analyze the text.
     chrome.runtime.sendMessage({ type: 'analyzeForRedaction', data: pastedText }, (response) => {
         if (chrome.runtime.lastError) {
-            // If the background script fails for any reason, paste the original text.
             console.error("DLP Background Script Error:", chrome.runtime.lastError.message);
-            pasteText(pastedText, targetElement);
+            pasteText(pastedText, targetElement); // Fallback on error
             return;
         }
 
-        // --- STEP 3: DECIDE WHAT TO DO WITH THE RESULT ---
+        // STEP 3: Decide what to do.
         if (response && response.matches && response.matches.length > 0) {
-            // A) If sensitive data is found, show our UI.
+            // A) Sensitive data found: Show our UI.
             showRedactionUI(pastedText, response.matches, targetElement);
         } else {
-            // B) If the text is clean, we are now responsible for pasting it ourselves.
+            // B) THE MISSING PIECE: Text is clean, so we manually paste it.
             pasteText(pastedText, targetElement);
         }
     });
-}, true); // Use capture phase to run before the website's own scripts.
+}, true); // Use capture phase.
