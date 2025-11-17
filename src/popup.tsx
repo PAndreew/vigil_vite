@@ -65,7 +65,7 @@ const Popup = () => {
                 <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="enabledToggle" className="font-semibold">Protection Status</Label>
-                        <Switch id="enabledToggle" checked={dlpEnabled} onCheckedChange={handleToggle} />
+                        <Switch id="enabledToggle" checked={dlpEnabled} onCheckedChange={handleToggle} className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-slate-600"/>
                     </div>
                 </CardContent>
             </Card>
@@ -100,7 +100,7 @@ const Popup = () => {
                             placeholder={currentTabDomain || "e.g., example.com"}
                             className="bg-slate-700 border-slate-600 focus:ring-blue-500 focus:ring-1"
                         />
-                        <Button onClick={handleAddDomain} className="bg-blue-600 hover:bg-blue-700 text-white">Add Site</Button>
+                        <Button onClick={handleAddDomain} className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6">Add Site</Button>
                     </div>
                 </CardContent>
             </Card>
