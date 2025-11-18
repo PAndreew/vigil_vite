@@ -37,32 +37,9 @@ chrome.runtime.onInstalled.addListener(async (details) => {
         console.log('[DLP] First-time installation. Setting up default protected sites.');
         const data = await chrome.storage.local.get('protectedDomains');
         if (!data.protectedDomains) {
-            const manifest = chrome.runtime.getManifest();
-            const defaultSites = new Set<string>();
-            const resources = manifest.web_accessible_resources || [];
-
-            for (const resource of resources) {
-                // =================================================================
-                // BUG FIX: Add a type guard to satisfy TypeScript.
-                // We must check that 'resource' is an object and has the 'matches'
-                // property before we attempt to access it. This makes the code
-                // robust against different manifest configurations.
-                // =================================================================
-                if (typeof resource === 'object' && resource.matches) {
-                    for (const match of resource.matches) {
-                        try {
-                            const cleanUrl = match.replace('/*', '');
-                            const hostname = new URL(cleanUrl).hostname;
-                            defaultSites.add(hostname);
-                        } catch (e) {
-                            console.warn(`[DLP] Could not parse manifest match pattern: ${match}`);
-                        }
-                    }
-                }
-            }
-            const defaultDomainList = Array.from(defaultSites);
-            await chrome.storage.local.set({ protectedDomains: defaultDomainList });
-            console.log('[DLP] Default protected sites initialized:', defaultDomainList);
+            console.log('Initializing default protected domains...');
+            const defaultSites = ["chatgpt.com", "claude.ai", "aistudio.google.com", "grok.com", "chat.qwen.ai"];
+            await chrome.storage.local.set({ protectedDomains: defaultSites });
         }
     }
 });
@@ -85,13 +62,33 @@ async function handleAnalysis(message: any, sender: chrome.runtime.MessageSender
     if (settings.dlpEnabled === false) return { matches: [] };
     const protectedDomains = settings.protectedDomains || [];
     if (sender.tab?.url) {
-        try {
-            const url = new URL(sender.tab.url);
-            if (!protectedDomains.includes(url.hostname)) return { matches: [] };
-        } catch (e) { return { matches: [] }; }
-    } else { return { matches: [] }; }
+        // Use the new smart matching function instead of strict .includes()
+        if (!isDomainProtected(sender.tab.url, protectedDomains)) {
+            return { matches: [] };
+        }
+    } else { 
+        return { matches: [] }; 
+    }
     const findings = findSensitiveData(message.data);
     return { matches: findings };
+}
+
+// Helper: Check if the current URL matches any protected domain
+function isDomainProtected(currentUrl: string, protectedList: string[]): boolean {
+    try {
+        const currentHost = new URL(currentUrl).hostname.toLowerCase();
+        
+        return protectedList.some(domain => {
+            // 1. Clean the stored domain (remove protocol/paths just in case bad data got in)
+            let target = domain.toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
+            
+            // 2. Check for exact match OR subdomain match
+            // e.g., "chatgpt.com" matches "chatgpt.com" and "api.chatgpt.com"
+            return currentHost === target || currentHost.endsWith('.' + target);
+        });
+    } catch (e) {
+        return false;
+    }
 }
 
 // --- THE NEW & IMPROVED DETECTION ENGINE ---

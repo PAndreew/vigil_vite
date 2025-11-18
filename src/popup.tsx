@@ -39,12 +39,28 @@ const Popup = () => {
         chrome.storage.local.set({ dlpEnabled: checked });
     };
 
+    const sanitizeDomain = (input: string): string | null => {
+        const trimmed = input.trim().toLowerCase();
+        if (!trimmed) return null;
+        
+        try {
+            // If user types "google.com", URL() throws error because it needs protocol.
+            // So we force a protocol to parse it, then grab hostname.
+            const urlStr = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
+            return new URL(urlStr).hostname;
+        } catch (e) {
+            // If parsing fails completely, return the trimmed string (fallback)
+            return trimmed;
+        }
+    };
+
     const handleAddDomain = () => {
-        const domainToAdd = newDomain.trim() || currentTabDomain;
-        if (domainToAdd && !protectedDomains.includes(domainToAdd)) {
-            const updatedDomains = [...protectedDomains, domainToAdd].sort();
+        const rawInput = newDomain.trim() || currentTabDomain;
+        const cleanDomain = sanitizeDomain(rawInput);
+
+        if (cleanDomain && !protectedDomains.includes(cleanDomain)) {
+            const updatedDomains = [...protectedDomains, cleanDomain].sort();
             setProtectedDomains(updatedDomains);
-            // Save to storage under the key 'protectedDomains'
             chrome.storage.local.set({ protectedDomains: updatedDomains });
             setNewDomain('');
         }
@@ -65,7 +81,7 @@ const Popup = () => {
             <Card className="bg-slate-800 border-slate-700 mb-4">
                 <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="enabledToggle" className="font-semibold">Protection Status</Label>
+                        <Label htmlFor="enabledToggle" className="font-semibold font-[grotesque]">Protection Status</Label>
                         <Switch id="enabledToggle" checked={dlpEnabled} onCheckedChange={handleToggle} className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-slate-600"/>
                     </div>
                 </CardContent>

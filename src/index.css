@@ -29,6 +29,4 @@
 
 @import "tailwindcss";
 
-@theme {
-  --default-font-family: 'Darker Grotesque', var(--font-sans);
-}
+@theme { --font-grotesque: "Darker Grotesque", sans-serif; }

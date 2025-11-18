@@ -1,11 +1,35 @@
-// src/content/index.tsx
+// State to track if we are currently handling a file or a paste
+type InteractionType = 'paste' | 'file';
 
 let activeIframe: HTMLIFrameElement | null = null;
 let currentTargetElement: HTMLElement | null = null;
+let currentInteractionType: InteractionType = 'paste'; 
 
-// This is the hotkey listener. It is only active when the iframe is visible.
+// --- Helper: Read File Content ---
+// Only attempts to read text/code files to prevent hanging on large binaries
+const readFileContent = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        // basic check for text types or typical code extensions
+        const isText = file.type.startsWith('text/') || 
+                       file.type === 'application/json' ||
+                       file.type.includes('javascript') ||
+                       file.name.match(/\.(txt|md|csv|json|js|ts|py|java|c|cpp|h|html|css|xml|log)$/i);
+
+        if (!isText) {
+            resolve(''); // Skip binary files for now
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string || '');
+        reader.onerror = (e) => reject(e);
+        reader.readAsText(file);
+    });
+};
+
+// --- Hotkey Listener ---
 const handleGlobalKeyDown = (event: KeyboardEvent) => {
-    if (!activeIframe) return; // Do nothing if the modal isn't open
+    if (!activeIframe) return;
 
     if (event.altKey) {
         if (event.key.toLowerCase() === 'r') {
@@ -21,10 +45,12 @@ const handleGlobalKeyDown = (event: KeyboardEvent) => {
     }
 };
 
-// Creates the iframe and activates the hotkey listener
-function showRedactionUI(originalText: string, matches: any[], targetElement: HTMLElement) {
+// --- Show UI ---
+function showRedactionUI(originalText: string, matches: any[], targetElement: HTMLElement, type: InteractionType) {
     if (activeIframe) activeIframe.remove();
+    
     currentTargetElement = targetElement;
+    currentInteractionType = type; // Track what kind of event triggered this
 
     activeIframe = document.createElement('iframe');
     activeIframe.src = chrome.runtime.getURL('src/iframe/iframe.html');
@@ -36,73 +62,134 @@ function showRedactionUI(originalText: string, matches: any[], targetElement: HT
 
     activeIframe.onload = () => {
         activeIframe?.contentWindow?.postMessage({ type: 'dlp-data', originalText, matches }, '*');
-        // Activate listener now that UI is visible
         document.addEventListener('keydown', handleGlobalKeyDown);
     };
 }
 
-// Manually inserts text into the target element
+// --- Text Insertion Logic ---
 function pasteText(text: string, targetElement: any) {
     if (!targetElement) return;
-    if (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA') {
-        const start = targetElement.selectionStart;
-        const end = targetElement.selectionEnd;
-        targetElement.value = targetElement.value.substring(0, start) + text + targetElement.value.substring(end);
-        targetElement.selectionStart = targetElement.selectionEnd = start + text.length;
-        targetElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-    } else if (targetElement.isContentEditable) {
+    
+    // If we are handling a file, we usually want to paste into the main chat box, 
+    // not the file input itself (which can't accept text).
+    // We try to find the nearest text area if the target is a file input.
+    let finalTarget = targetElement;
+    
+    if (targetElement.type === 'file') {
+        // Strategy: Look for the main active element or a textarea on the page
+        // This is a heuristic; for specific chatbots, you might need specific selectors.
+        const active = document.activeElement as HTMLElement;
+        if (active && (active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+            finalTarget = active;
+        } else {
+            // Fallback: Query for a common chat input
+            finalTarget = document.querySelector('textarea, [contenteditable="true"]');
+        }
+    }
+
+    if (!finalTarget) return;
+
+    if (finalTarget.tagName === 'INPUT' || finalTarget.tagName === 'TEXTAREA') {
+        const start = finalTarget.selectionStart || finalTarget.value.length;
+        const end = finalTarget.selectionEnd || finalTarget.value.length;
+        finalTarget.value = finalTarget.value.substring(0, start) + text + finalTarget.value.substring(end);
+        finalTarget.selectionStart = finalTarget.selectionEnd = start + text.length;
+        finalTarget.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+    } else if (finalTarget.isContentEditable) {
+        finalTarget.focus();
         document.execCommand('insertText', false, text);
     }
 }
 
-// Listens for the decision from the iframe and deactivates the hotkey listener
+// --- Decision Handler ---
 window.addEventListener('message', (event) => {
     const data = event.data;
     if (data.type === 'dlp-decision') {
-        if (data.action !== 'cancel' && currentTargetElement) {
-            pasteText(data.text, currentTargetElement);
+        
+        // Logic for File Inputs
+        if (currentInteractionType === 'file' && currentTargetElement instanceof HTMLInputElement) {
+            if (data.action === 'cancel') {
+                // BLOCK: Clear the file selection
+                currentTargetElement.value = ''; 
+            } else if (data.action === 'pasteOriginal') {
+                // ALLOW: Do nothing, let the file stay attached
+            } else if (data.action === 'pasteModified') {
+                // CONVERT: Clear file, paste redacted text instead
+                currentTargetElement.value = '';
+                pasteText(data.text, currentTargetElement);
+            }
+        } 
+        // Logic for Paste Events
+        else if (currentInteractionType === 'paste') {
+            if (data.action !== 'cancel' && currentTargetElement) {
+                pasteText(data.text, currentTargetElement);
+            }
         }
+
         if (activeIframe) {
             activeIframe.remove();
             activeIframe = null;
         }
         currentTargetElement = null;
-        // Deactivate listener now that UI is gone
         document.removeEventListener('keydown', handleGlobalKeyDown);
     }
 });
 
 // =======================================================================
-// THE CORRECTED PASTE LISTENER
+//  LISTENER 1: FILE UPLOADS (New Feature)
+// =======================================================================
+document.addEventListener('change', async (event) => {
+    const target = event.target as HTMLInputElement;
+    
+    // Only care if it is a file input and has files
+    if (target && target.type === 'file' && target.files && target.files.length > 0) {
+        const file = target.files[0]; // Grab the first file
+        
+        try {
+            const fileContent = await readFileContent(file);
+            
+            // If file is empty or binary (skipped), ignore
+            if (!fileContent) return;
+
+            chrome.runtime.sendMessage({ type: 'analyzeForRedaction', data: fileContent }, (response) => {
+                if (chrome.runtime.lastError) return;
+
+                if (response && response.matches && response.matches.length > 0) {
+                    // Sensitive data found in file!
+                    // Note: We cannot prevent the 'change' event propagation easily as it happened.
+                    // But we CAN clear the value if the user decides to cancel in our UI.
+                    showRedactionUI(fileContent, response.matches, target, 'file');
+                }
+            });
+        } catch (err) {
+            console.warn("[DLP] Error reading file:", err);
+        }
+    }
+}, true); // Capture phase
+
+// =======================================================================
+//  LISTENER 2: PASTE EVENTS (Existing Feature)
 // =======================================================================
 document.addEventListener('paste', (event) => {
     const pastedText = event.clipboardData?.getData('text/plain');
     const targetElement = event.target as HTMLElement;
     const isEditable = targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA' || targetElement.isContentEditable;
 
-    if (!isEditable || !pastedText) {
-        return;
-    }
+    if (!isEditable || !pastedText) return;
 
-    // STEP 1: Always stop the browser's default paste action.
     event.preventDefault();
     event.stopPropagation();
 
-    // STEP 2: Analyze the text.
     chrome.runtime.sendMessage({ type: 'analyzeForRedaction', data: pastedText }, (response) => {
         if (chrome.runtime.lastError) {
-            console.error("DLP Background Script Error:", chrome.runtime.lastError.message);
-            pasteText(pastedText, targetElement); // Fallback on error
+            pasteText(pastedText, targetElement);
             return;
         }
 
-        // STEP 3: Decide what to do.
         if (response && response.matches && response.matches.length > 0) {
-            // A) Sensitive data found: Show our UI.
-            showRedactionUI(pastedText, response.matches, targetElement);
+            showRedactionUI(pastedText, response.matches, targetElement, 'paste');
         } else {
-            // B) THE MISSING PIECE: Text is clean, so we manually paste it.
             pasteText(pastedText, targetElement);
         }
     });
-}, true); // Use capture phase.
+}, true);
