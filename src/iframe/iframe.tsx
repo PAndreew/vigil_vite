@@ -1,8 +1,5 @@
-// src/iframe/iframe.tsx
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
-// Import the component and its ref type
 import { RedactionModal } from '../components/Modal';
 import type { RedactionModalRef } from '../components/Modal';
 
@@ -13,7 +10,6 @@ const IframeApp = () => {
     const modalRef = useRef<RedactionModalRef>(null);
     const [redactionData, setRedactionData] = useState<{ originalText: string, matches: Match[] } | null>(null);
 
-    // This function is still the single point of truth for sending the final decision
     const handleDecision = useCallback((action: string, text?: string) => {
         window.parent.postMessage({ type: 'dlp-decision', action, text }, '*');
     }, []);
@@ -25,7 +21,6 @@ const IframeApp = () => {
             if (data.type === 'dlp-data') {
                 setRedactionData({ originalText: data.originalText, matches: data.matches });
             }
-            // --- THE FIX: Use the ref to call functions on the modal component ---
             else if (data.type === 'dlp-hotkey') {
                 switch (data.action) {
                     case 'pasteModified':
@@ -43,7 +38,7 @@ const IframeApp = () => {
 
         window.addEventListener('message', messageListener);
         return () => window.removeEventListener('message', messageListener);
-    }, []); // Removed handleDecision from dependencies as it's stable
+    }, []);
 
     if (!redactionData) {
         return null;

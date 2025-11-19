@@ -1,5 +1,3 @@
-// src/background.ts
-
 console.log('[DLP Background] Rule-based Engine starting up.');
 
 type PiiRule = {
@@ -53,7 +51,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-// --- CORE LOGIC (No changes needed here) ---
+// --- CORE LOGIC ---
 async function handleAnalysis(message: any, sender: chrome.runtime.MessageSender) {
     if (!message.data || typeof message.data !== 'string' || message.data.length > 100000) {
         return { matches: [] };
@@ -62,7 +60,6 @@ async function handleAnalysis(message: any, sender: chrome.runtime.MessageSender
     if (settings.dlpEnabled === false) return { matches: [] };
     const protectedDomains = settings.protectedDomains || [];
     if (sender.tab?.url) {
-        // Use the new smart matching function instead of strict .includes()
         if (!isDomainProtected(sender.tab.url, protectedDomains)) {
             return { matches: [] };
         }
@@ -73,7 +70,6 @@ async function handleAnalysis(message: any, sender: chrome.runtime.MessageSender
     return { matches: findings };
 }
 
-// Helper: Check if the current URL matches any protected domain
 function isDomainProtected(currentUrl: string, protectedList: string[]): boolean {
     try {
         const currentHost = new URL(currentUrl).hostname.toLowerCase();
@@ -91,7 +87,6 @@ function isDomainProtected(currentUrl: string, protectedList: string[]): boolean
     }
 }
 
-// --- THE NEW & IMPROVED DETECTION ENGINE ---
 function findSensitiveData(text: string): Finding[] {
     const findings: Finding[] = [];
     const matchedValues = new Set<string>();
@@ -121,16 +116,16 @@ function findSensitiveData(text: string): Finding[] {
 
         const hasNumber = /[0-9]/.test(word);
         const hasLetter = /[a-zA-Z]/.test(word);
-        const hasSpecialChar = /[^a-zA-Z0-9]/.test(word); // Checks for any non-alphanumeric char
+        const hasSpecialChar = /[^a-zA-Z0-9]/.test(word);
 
         // =================================================================
-        // BUG FIX 2: Restore the original "crude" rule's logic.
-        // It now checks for (letters + numbers) OR (special chars + numbers).
-        // This will correctly identify API keys, passwords, AND order numbers like #8401-2295.
+        // "CRUDE RULE" logic.
+        // It checks for (letters + numbers) OR (special chars + numbers).
+        // This will correctly identify API keys, passwords, etc.
         // =================================================================
         if ((hasLetter && hasNumber) || (hasSpecialChar && hasNumber)) {
             findings.push({
-                name: 'Potential Sensitive ID / Code', // More generic and accurate name
+                name: 'Other Potential Sensitive Data',
                 value: word,
                 dummyValue: '[REDACTED]'
             });

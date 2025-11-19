@@ -136,7 +136,7 @@ window.addEventListener('message', (event) => {
 });
 
 // =======================================================================
-//  LISTENER 1: FILE UPLOADS (New Feature)
+//  LISTENER 1: FILE UPLOADS
 // =======================================================================
 document.addEventListener('change', async (event) => {
     const target = event.target as HTMLInputElement;
@@ -168,7 +168,7 @@ document.addEventListener('change', async (event) => {
 }, true); // Capture phase
 
 // =======================================================================
-//  LISTENER 2: PASTE EVENTS (Existing Feature)
+//  LISTENER 2: PASTE EVENTS
 // =======================================================================
 document.addEventListener('paste', (event) => {
     const pastedText = event.clipboardData?.getData('text/plain');
