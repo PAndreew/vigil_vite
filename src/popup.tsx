@@ -76,29 +76,29 @@ const Popup = () => {
         <div className="w-96 p-4 bg-slate-900 text-white font-sans">
             <div className="flex items-center gap-3 mb-4">
                 <LogoIcon className="h-8 w-8" />
-                <h1 className="text-xl font-bold">Vigil - DLP Protection</h1>
+                <h1 className="text-xl font-bold font-grotesque">Vigil - DLP Protection</h1>
             </div>
-            <Card className="bg-slate-800 border-slate-700 mb-4">
+            <Card className="bg-slate-800 border-slate-700 rounded-none mb-4">
                 <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="enabledToggle" className="font-semibold font-[grotesque]">Protection Status</Label>
+                        <Label htmlFor="enabledToggle" className="font-semibold font-grotesque text-lg">Protection Status</Label>
                         <Switch id="enabledToggle" checked={dlpEnabled} onCheckedChange={handleToggle} className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-slate-600"/>
                     </div>
                 </CardContent>
             </Card>
-            <Card className="bg-slate-800 border-slate-700">
+            <Card className="bg-slate-800 border-slate-700 rounded-none">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-slate-400" />
+                        <ShieldCheck className="h-5 w-5 text-slate-400 font-grotesque"/>
                         Protected Site List
                     </CardTitle>
-                    <CardDescription>Protection is ONLY active on these sites.</CardDescription>
+                    <CardDescription className="font-grotesque">Protection is ONLY active on these sites.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="max-h-40 overflow-y-auto mb-4 border border-slate-700 rounded-lg p-2 space-y-1">
                         {protectedDomains.length > 0 ? (
                             protectedDomains.map(domain => (
-                                <div key={domain} className="flex justify-between items-center p-1.5 bg-slate-700/50 rounded text-sm">
+                                <div key={domain} className="flex justify-between items-center p-1.5 bg-slate-700/50 rounded font-grotesque">
                                     <span>{domain}</span>
                                     <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-slate-400 hover:text-white" onClick={() => handleRemoveDomain(domain)}>
                                         &times;
@@ -115,9 +115,9 @@ const Popup = () => {
                             value={newDomain}
                             onChange={(e) => setNewDomain(e.target.value)}
                             placeholder={currentTabDomain || "e.g., example.com"}
-                            className="bg-slate-700 border-slate-600 focus:ring-blue-500 focus:ring-1"
+                            className="bg-slate-700 border-slate-600 focus:ring-blue-500 focus:ring-1 rounded-none"
                         />
-                        <Button onClick={handleAddDomain} className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6">Add Site</Button>
+                        <Button onClick={handleAddDomain} className="bg-purple-600 hover:bg-purple-700 text-white rounded-full font-grotesque px-6">Add Site</Button>
                     </div>
                 </CardContent>
             </Card>

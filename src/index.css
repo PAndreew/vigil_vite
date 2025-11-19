@@ -1,32 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+    /* This automatically generates the class "font-grotesque" */
+    --font-grotesque: "Darker Grotesque", sans-serif;
+}
+
+/* Note: The path starts with /fonts because the 'public' folder content 
+   is copied to the root of the extension during build */
 
 @font-face {
     font-family: 'Darker Grotesque';
     src: url('/fonts/DarkerGrotesque-Regular.ttf') format('truetype');
-    font-weight: 400; /* Regular */
+    font-weight: 400;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'Darker Grotesque';
     src: url('/fonts/DarkerGrotesque-SemiBold.ttf') format('truetype');
-    font-weight: 600; /* SemiBold */
-  font-style: normal;
+    font-weight: 600;
+    font-style: normal;
 }
 
 @font-face {
     font-family: 'Darker Grotesque';
     src: url('/fonts/DarkerGrotesque-Bold.ttf') format('truetype');
-    font-weight: 700; /* Bold */
+    font-weight: 700;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'Darker Grotesque';
     src: url('/fonts/DarkerGrotesque-Black.ttf') format('truetype');
-    font-weight: 900; /* Black */
+    font-weight: 900;
     font-style: normal;
 }
-
-@import "tailwindcss";
-
-@theme { --font-grotesque: "Darker Grotesque", sans-serif; }
