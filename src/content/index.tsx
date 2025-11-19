@@ -53,11 +53,26 @@ function showRedactionUI(originalText: string, matches: any[], targetElement: HT
     currentInteractionType = type; // Track what kind of event triggered this
 
     activeIframe = document.createElement('iframe');
-    activeIframe.src = chrome.runtime.getURL('src/iframe/iframe.html');
+        activeIframe.src = chrome.runtime.getURL('src/iframe/iframe.html');
+    
+    // We try to avoid Composite Layer issues (white glitch)        
     activeIframe.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        border: none; z-index: 2147483647; background: transparent;
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%;
+        border: none; 
+        z-index: 2147483647; 
+        background: transparent !important;
+        color-scheme: none;
+        /* The following two lines fix the GPU glitch */
+        transform: translate3d(0, 0, 0); 
+        will-change: transform; 
     `;
+    
+    // Fallback for older rendering engines
+    activeIframe.setAttribute('allowtransparency', 'true');
     document.body.appendChild(activeIframe);
 
     activeIframe.onload = () => {

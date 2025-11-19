@@ -3,6 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <title>DLP Redaction</title>
+    <style>
+      /* CRITICAL FIX: Force transparent background immediately */
+      html, body {
+        background-color: transparent !important;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Prevents scrollbars from flickering */
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        background-color: transparent !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
