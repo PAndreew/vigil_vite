@@ -112,7 +112,7 @@ This project is licensed under the **GNU Affero General Public License v3.0 (AGP
 *   **Personal Use:** Free to use and modify.
 *   **Commercial Use:** If you modify this software and provide it as a service (internally or externally), you must make the source code available.
 
-*For a commercial license that exempts you from AGPL obligations and grants access to Enterprise features, please contact us.*
+*For a commercial license that exempts you from AGPL obligations and grants access to (upcoming) Enterprise features, please contact us.*
 
 ---
 
