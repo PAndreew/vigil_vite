@@ -76,11 +76,11 @@ const Popup = () => {
                 <LogoIcon className="h-8 w-8 text-amber-500" />
                 <div>
                     <h1 className="text-xl font-bold tracking-wide text-slate-100">VIGIL DLP</h1>
-                    <p className="text-xs text-slate-500 font-mono uppercase tracking-wider">Enterprise Protection</p>
+                    <p className="text-sm text-slate-300 font-mono uppercase tracking-wider">AI Data Leak Protection</p>
                 </div>
             </div>
 
-            <div className="flex-1 flex flex-col min-h-0 p-5 space-y-4">
+            <div className="flex-1 flex flex-col min-h-0 p-5 space-y-2">
                 
                 <Card className="bg-slate-900 border-amber-500/30 rounded-none shadow-lg shrink-0">
                     <CardContent className="p-4 flex items-center justify-between">
@@ -105,7 +105,7 @@ const Popup = () => {
                             <ShieldCheck className="h-4 w-4 text-amber-400" />
                             Monitored Environments
                         </CardTitle>
-                        <CardDescription className="text-slate-500 text-xs">
+                        <CardDescription className="text-slate-300 text-sm">
                             DLP scanning is active on these domains.
                         </CardDescription>
                     </CardHeader>

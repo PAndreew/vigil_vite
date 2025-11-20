@@ -95,19 +95,30 @@ export const RedactionModal = forwardRef<RedactionModalRef, ModalProps>(
                                             min-w-0 allows the truncate to actually happen.
                                         */}
                                         <div className="flex-1 min-w-0 mr-3"> 
-                                            <p className="font-bold text-sm text-slate-200 font-grotesque mb-1 truncate">{match.name}</p>
+    
+                                            {/* MATCH NAME */}
+                                            <p className="font-bold text-sm text-slate-200 font-grotesque mb-1 truncate">
+                                                {match.name}
+                                            </p>
                                             
                                             {/* TOOLTIP LOGIC */}
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <code className="text-xs text-amber-200/90 bg-slate-950 border border-slate-800 px-2 py-1 rounded block truncate font-mono cursor-help hover:bg-slate-900 hover:border-amber-500/40 transition-colors">
+                                                    {/* 
+                                                    FIX: 
+                                                    1. w-full: Tells the code block to fill the parent (which is constrained by min-w-0).
+                                                    2. max-w-[220px]: A safety net. This forces the browser to stop expanding 
+                                                        if flexbox calculation gets lazy.
+                                                    */}
+                                                    <code className="text-xs text-amber-200/90 bg-slate-950 border border-slate-800 px-2 py-1 rounded block truncate font-mono cursor-help hover:bg-slate-900 hover:border-amber-500/40 transition-colors w-full max-w-[220px]">
                                                         {match.value}
                                                     </code>
                                                 </TooltipTrigger>
                                                 <TooltipContent 
                                                     side="top" 
                                                     align="start"
-                                                    className="bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs max-w-[300px] break-all z-[2147483650]"
+                                                    // z-index ensures it floats above everything
+                                                    className="bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs max-w-[300px] break-all z-[2147483650] shadow-xl"
                                                 >
                                                     {match.value}
                                                 </TooltipContent>
