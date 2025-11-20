@@ -88,7 +88,7 @@ Future Development Roadmap:
 - [ ] Compliance Reporting (Audit Logs & Analytics) *
 
 > *These features might be part a future "Vigil for Business" self-hosted/managed offering to support the project's sustainability.
-Interested in using Vigil at your company?
+Interested in using Vigil?
 We are looking for early design partners to help shape the business features. [Email us](vigil.dlp.info@gmail.com) to chat.
 
 ## 🐛 Bugs
