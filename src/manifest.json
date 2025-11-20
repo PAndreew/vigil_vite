@@ -4,6 +4,9 @@
   "version": "1.3.6",
   "description": "Prevents leakage of sensitive data through AI chatbots by analyzing pasted content locally.",
   "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "src/background.ts",
     "type": "module"

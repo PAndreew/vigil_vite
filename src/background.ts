@@ -1,90 +1,78 @@
 console.log('[DLP Background] Rule-based Engine starting up.');
 
-type PiiRule = {
-    name: string;
-    regex: string;
-    dummyValue: string;
-};
-
-type Finding = {
-    name: string;
-    value: string;
-    dummyValue: string;
-};
+type PiiRule = { name: string; regex: string; dummyValue: string; };
+type Finding = { name: string; value: string; dummyValue: string; };
 
 let piiRules: PiiRule[] = [];
+// 1. Create a promise variable to track loading state
+let rulesLoadedPromise: Promise<void> | null = null;
 
 // --- RULE LOADING ---
 async function loadRules() {
     try {
         const rulesURL = chrome.runtime.getURL('pii-rules.json');
         const response = await fetch(rulesURL);
-        if (!response.ok) throw new Error(`Failed to fetch rules: ${response.statusText}`);
+        if (!response.ok) throw new Error(`Failed to fetch rules`);
         piiRules = await response.json();
-        console.log(`[DLP] Successfully loaded ${piiRules.length} specific PII rules.`);
+        console.log(`[DLP] Loaded ${piiRules.length} rules.`);
     } catch (error) {
-        console.error('[DLP] CRITICAL: Could not load pii-rules.json.', error);
+        console.error('[DLP] Error loading rules:', error);
         piiRules = [];
     }
 }
-loadRules();
 
-// --- ONE-TIME SETUP on INSTALL ---
-chrome.runtime.onInstalled.addListener(async (details) => {
-    if (details.reason === 'install') {
-        console.log('[DLP] First-time installation. Setting up default protected sites.');
-        const data = await chrome.storage.local.get('protectedDomains');
-        if (!data.protectedDomains) {
-            console.log('Initializing default protected domains...');
-            const defaultSites = ["chatgpt.com", "claude.ai", "aistudio.google.com", "grok.com", "chat.qwen.ai"];
-            await chrome.storage.local.set({ protectedDomains: defaultSites });
-        }
-    }
-});
+// 2. Initialize the promise immediately
+rulesLoadedPromise = loadRules();
 
+// --- HELPER: Check Protected Domain ---
+function isDomainProtected(currentUrl: string, protectedList: string[]): boolean {
+    if (!currentUrl) return false; // Safety check
+    try {
+        const currentHost = new URL(currentUrl).hostname.toLowerCase();
+        return protectedList.some(domain => {
+            let target = domain.toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
+            return currentHost === target || currentHost.endsWith('.' + target);
+        });
+    } catch (e) { return false; }
+}
 
 // --- MESSAGE LISTENER ---
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'analyzeForRedaction') {
+        // 3. IMPORTANT: return true to indicate we will respond asynchronously
         handleAnalysis(message, sender).then(sendResponse);
-        return true;
+        return true; 
     }
 });
 
 // --- CORE LOGIC ---
 async function handleAnalysis(message: any, sender: chrome.runtime.MessageSender) {
-    if (!message.data || typeof message.data !== 'string' || message.data.length > 100000) {
+    // 4. Await the rules before doing anything else
+    if (rulesLoadedPromise) {
+        await rulesLoadedPromise;
+    }
+
+    if (!message.data || typeof message.data !== 'string' || message.data.length > 1000000) {
         return { matches: [] };
     }
+
     const settings = await chrome.storage.local.get(['dlpEnabled', 'protectedDomains']);
     if (settings.dlpEnabled === false) return { matches: [] };
+
     const protectedDomains = settings.protectedDomains || [];
+
     if (sender.tab?.url) {
         if (!isDomainProtected(sender.tab.url, protectedDomains)) {
             return { matches: [] };
         }
-    } else { 
-        return { matches: [] }; 
+    } else {
+        // If sender.tab.url is undefined (permissions issue), we fail safe.
+        console.warn("[DLP] Could not determine tab URL. Check host_permissions.");
+        return { matches: [] };
     }
+
     const findings = findSensitiveData(message.data);
     return { matches: findings };
-}
-
-function isDomainProtected(currentUrl: string, protectedList: string[]): boolean {
-    try {
-        const currentHost = new URL(currentUrl).hostname.toLowerCase();
-        
-        return protectedList.some(domain => {
-            // 1. Clean the stored domain (remove protocol/paths just in case bad data got in)
-            let target = domain.toLowerCase().replace(/^https?:\/\//, '').split('/')[0];
-            
-            // 2. Check for exact match OR subdomain match
-            // e.g., "chatgpt.com" matches "chatgpt.com" and "api.chatgpt.com"
-            return currentHost === target || currentHost.endsWith('.' + target);
-        });
-    } catch (e) {
-        return false;
-    }
 }
 
 function findSensitiveData(text: string): Finding[] {
