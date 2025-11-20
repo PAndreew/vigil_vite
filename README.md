@@ -35,9 +35,6 @@ https://github.com/user-attachments/assets/cb9e7571-050d-4c29-b8ef-0a70b6c5dab6
     *   **Cancel:** Block the action entirely.
 *   **Privacy First:** All scanning happens locally in the browser. Your data is never sent to a cloud server for analysis.
 
-Watch the demo:
-https://github.com/user-attachments/assets/cb9e7571-050d-4c29-b8ef-0a70b6c5dab6
-
 ## 💻 Installation
 
 Vigil is built with React, TypeScript, and Vite.
