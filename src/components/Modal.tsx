@@ -66,17 +66,22 @@ export const RedactionModal = forwardRef<RedactionModalRef, ModalProps>(
                     </Button>
                 </CardHeader>
                 <CardContent className="py-2 max-h-[60vh] overflow-y-auto pr-3 space-y-2">
-                     {matches.map((match, index) => (
-                        <div key={index} className="bg-slate-900/60 border border-red-300/20 rounded-lg p-3 flex justify-between items-center">
-                            <div className="overflow-hidden mr-4">
-                                <p className="font-semibold text-slate-200 font-grotesque">{match.name}</p>
-                                <code className="text-slate-400 bg-slate-950/70 p-1 rounded block truncate font-grotesque">{match.value}</code>
-                            </div>
-                            <div className="flex items-center space-x-2 flex-shrink-0">
-                                <Label htmlFor={`redact-${index}`} className="text-red-400 font-bold text-sm cursor-pointer font-grotesque">REDACT</Label>
-                                <Switch id={`redact-${index}`} checked={redactionState[index]} onCheckedChange={(checked) => setRedactionState(prev => ({...prev, [index]: checked}))} className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-slate-600"/>
-                            </div>
+                    {matches.map((match, index) => (
+                    <div key={index} className="bg-slate-900/60 border border-red-300/20 rounded-lg p-3 flex justify-between items-center">
+                        <div className="overflow-hidden mr-4 flex-1"> {/* Added flex-1 to take available space */}
+                            
+                            {/* CHANGE 1: text-sm -> text-base, font-semibold -> font-bold, added mb-1 for spacing */}
+                            <p className="font-bold text-base text-slate-100 font-grotesque mb-1">{match.name}</p>
+                            <code className="text-sm text-purple-200 bg-slate-950/80 px-2 py-1 rounded block truncate font-mono">
+                                {match.value}
+                            </code>
+
                         </div>
+                        <div className="flex items-center space-x-2 flex-shrink-0">
+                            <Label htmlFor={`redact-${index}`} className="text-red-400 font-bold text-sm cursor-pointer font-grotesque">REDACT</Label>
+                            <Switch id={`redact-${index}`} checked={redactionState[index]} onCheckedChange={(checked) => setRedactionState(prev => ({...prev, [index]: checked}))} className="data-[state=checked]:bg-red-600 data-[state=unchecked]:bg-slate-600"/>
+                        </div>
+                    </div>
                     ))}
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-4 pt-4">
