@@ -135,7 +135,7 @@ const Popup = () => {
                                                 </div>
                                                 <Button 
                                                     variant="ghost" 
-                                                    size="sm" 
+                                                    size="lg" 
                                                     className="h-6 w-6 p-0 text-slate-600 hover:text-red-400 hover:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity" 
                                                     onClick={() => handleRemoveDomain(domain)}
                                                 >
