@@ -2,6 +2,8 @@
   <img src="src/assets/vigil_logo.svg" width="100" height="100" alt="Vigil Logo">
 </p>
 
+https://github.com/user-attachments/assets/cb9e7571-050d-4c29-b8ef-0a70b6c5dab6
+
 # Vigil DLP
 ### Client-Side Data Loss Prevention for the AI Era
 
