@@ -72,7 +72,7 @@ const Popup = () => {
     return (
         <div className="w-[400px] h-[600px] bg-slate-950 text-white font-grotesque flex flex-col overflow-hidden">
             
-            <div className="p-5 bg-slate-900/50 border-b border-slate-800 flex items-center gap-3 shrink-0">
+            <div className="p-2 bg-slate-900/50 border-b border-slate-800 flex items-center gap-3 shrink-0">
                 <LogoIcon className="h-8 w-8 text-amber-500" />
                 <div>
                     <h1 className="text-xl font-bold tracking-wide text-slate-100">VIGIL DLP</h1>
@@ -80,10 +80,10 @@ const Popup = () => {
                 </div>
             </div>
 
-            <div className="flex-1 flex flex-col min-h-0 p-5 space-y-2">
+            <div className="flex-1 flex flex-col min-h-0 p-2 space-y-2">
                 
                 <Card className="bg-slate-900 border-amber-500/30 rounded-none shadow-lg shrink-0">
-                    <CardContent className="p-4 flex items-center justify-between">
+                    <CardContent className="p-2 flex items-center justify-between">
                         <div className="flex flex-col">
                             <Label htmlFor="enabledToggle" className="font-bold text-lg text-slate-200 font-grotesque">Global Protection</Label>
                             <span className={`text-xs font-mono mt-1 ${dlpEnabled ? 'text-green-400' : 'text-slate-500'}`}>

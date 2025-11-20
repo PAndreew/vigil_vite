@@ -87,7 +87,7 @@ export const RedactionModal = forwardRef<RedactionModalRef, ModalProps>(
                             {/* Wrap logic in TooltipProvider */}
                             <TooltipProvider delayDuration={100}>
                                 {matches.map((match, index) => (
-                                    <div key={index} className="bg-slate-900/40 border border-red-500/20 rounded-none p-3 flex justify-between items-center group hover:border-red-500/40 transition-colors w-full">
+                                    <div key={index} className="bg-slate-800/40 border border-red-500/20 rounded-none p-3 flex justify-between items-center group hover:border-red-500/40 transition-colors w-full">
                                         
                                         {/* 
                                             FIX 1: min-w-0 
@@ -161,14 +161,14 @@ export const RedactionModal = forwardRef<RedactionModalRef, ModalProps>(
                             </Button>
                         </div>
                     </div>
-                    <div className="text-[10px] text-slate-500 flex items-center gap-2 font-grotesque w-full justify-center opacity-70">
+                    <div className="text-sm text-slate-300 flex items-center gap-2 font-grotesque w-full justify-center opacity-70">
                         <span>Hotkeys:</span>
                         <div className="flex items-center gap-1">
-                            <kbd className="font-mono px-1.5 py-0.5 text-[10px] font-bold text-slate-300 bg-slate-800 border border-slate-700 rounded">Alt+R</kbd> <span>Redact</span>
+                            <kbd className="font-mono px-1.5 py-0.5 text-sm font-bold text-slate-300 bg-slate-800 border border-slate-700 rounded">Alt+R</kbd> <span>Redact</span>
                         </div>
                         <span className="text-slate-700">|</span>
                         <div className="flex items-center gap-1">
-                            <kbd className="font-mono px-1.5 py-0.5 text-[10px] font-bold text-slate-300 bg-slate-800 border border-slate-700 rounded">Alt+O</kbd> <span>Original</span>
+                            <kbd className="font-mono px-1.5 py-0.5 text-sm font-bold text-slate-300 bg-slate-800 border border-slate-700 rounded">Alt+O</kbd> <span>Original</span>
                         </div>
                     </div>
                 </CardFooter>
