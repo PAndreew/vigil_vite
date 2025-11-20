@@ -10,22 +10,30 @@
 [![Edge](https://img.shields.io/badge/Edge-Extension-yellow.svg)]()
 [![React](https://img.shields.io/badge/Built%20With-React%20%2B%20Vite-61DAFB.svg)]()
 
-**Vigil DLP** is an open-source browser extension that acts as a firewall between your sensitive data and AI chatbots currently in Public Alpha. It intercepts pastes and (some) file uploads, scans them for PII (Personally Identifiable Information) and other forms of sensitive data (like API keys), and allows you to redact sensitive data *before* it leaves your browser.
+**Vigil DLP** is an open-source browser extension that acts as a firewall between your sensitive data and AI chatbots currently in Public Alpha. It intercepts pasted text content and (to some degree) file uploads, scans them for PII (Personally Identifiable Information) and other forms of sensitive data (like API keys), and allows you to redact sensitive data *before* it leaves your browser.
 
 ---
 
-## Features
+## 🎨 Features
 
-*   **Real-time Interception:** Automatically detects when you paste text or upload files to supported sites (ChatGPT, Claude, etc.).
+*   **Real-time Interception:** Automatically detects when you paste text or upload files to supported sites. The following sites have been tested for pasted text content:
+    * grok.com
+    * chatgpt.com
+    * aistudio.google.com
+    * claude.ai
+    * chat.qwen.ai
+    * mistral.ai
 *   **Smart Redaction:** Identifies Emails, Credit Cards, SSNs, API Keys, and custom Regex patterns.
-*   **File Scanning (Limited):** "Peeks" into uploaded text/code files (CSV, JSON, PY, TS, TXT) to detect secrets before upload.
+*   **File Scanning (Limited):** "Peeks" into uploaded text/code files (CSV, JSON, PY, TS, TXT) to detect secrets before upload. File scanning works for:
+    * mistral.ai
+    * chat.qwen.ai
 *   **Granular Control:** 
     *   **Redact:** Replace sensitive data with placeholders that keep the structure of the original. For example +361513734 becomes +00000000.
     *   **Original:** Bypass the filter for non-sensitive contexts.
     *   **Cancel:** Block the action entirely.
 *   **Privacy First:** All scanning happens locally in the browser. Your data is never sent to a cloud server for analysis.
 
-## Installation (Developer Mode)
+## 💻 Installation
 
 Vigil is built with React, TypeScript, and Vite.
 
@@ -59,27 +67,35 @@ Vigil is built with React, TypeScript, and Vite.
     *   `Alt + O`: Paste Original (Bypass).
     *   `Esc`: Cancel Paste/Upload.
 
-## 🔮 Project Roadmap & Commercial Goals
+## 🛣️ Project Roadmap
 Vigil is currently in Public Alpha. We are committed to keeping the core browser extension open-source and free for individuals.
 Future Development Roadmap:
 
-- [x] Local PII Detection (Email, Phone, CC)
+- [x] (!Partially) Local Sensitive Data Detection (API key, Email, Phone, CC)
 
 - [x] (!Partially) File Upload Scanning
 
+- [ ] Scan Uploaded Images
+
 - [ ] Custom Regex Rule Builder (UI)
+
+- [ ] Logging
 
 - [ ] Team Management (Centralized Policy Administration) *
 
 - [ ] Compliance Reporting (Audit Logs & Analytics) *
 
-* These features are planned for a future "Vigil for Business" self-hosted/managed offering to support the project's sustainability.
+> *These features might be part a future "Vigil for Business" self-hosted/managed offering to support the project's sustainability.
 Interested in using Vigil at your company?
-We are looking for early design partners to help shape the business features. [Open an issue] or [Email us] to chat.
+We are looking for early design partners to help shape the business features. [Email us](vigil.dlp.info@gmail.com) to chat.
+
+## 🐛 Bugs
+
+Due to the browsers' highly event-driven nature and the plethora of frameworks employed for web development it is quite tricky build robust features that works across the large majority of AI chatbot websites. 
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see `CONTRIBUTING.md` for details on how to submit pull requests, report issues, and request features.
+We welcome contributions! If you do so, please:
 
 1.  Fork the Project
 2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
