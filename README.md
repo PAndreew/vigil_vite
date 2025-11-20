@@ -91,7 +91,7 @@ We are looking for early design partners to help shape the business features. [E
 
 ## 🐛 Bugs
 
-Due to the browsers' highly event-driven nature and the plethora of frameworks employed for web development it is quite tricky build robust features that works across the large majority of AI chatbot websites. 
+Due to the browsers' highly event-driven nature and the plethora of frameworks employed for web development it is quite tricky build robust features that works across the large majority of AI chatbot websites. Currently it seems that the tool messes with AI Studio's (Google) paste functionality, but it also has saving issues after recent updates so we have to investigate that. Please if you find any bugs open an issue.
 
 ## 🤝 Contributing
 
