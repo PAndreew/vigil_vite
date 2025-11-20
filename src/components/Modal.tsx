@@ -9,7 +9,13 @@ import LogoIcon from '../assets/vigil_logo.svg?react';
 import modalStyles from '../index.css?inline';
 
 // --- Type Definitions ---
-type Match = { name: string; value: string; dummyValue: string; };
+type Match = { 
+    name: string; 
+    value: string; 
+    dummyValue: string;
+    index: number;   // <-- Add this
+    length: number;  // <-- Add this
+};
 type ModalProps = {
     originalText: string;
     matches: Match[];
@@ -33,14 +39,27 @@ export const RedactionModal = forwardRef<RedactionModalRef, ModalProps>(
     const handleClose = useCallback(() => onDecision('cancel'), [onDecision]);
     const handlePasteOriginal = useCallback(() => onDecision('pasteOriginal', originalText), [originalText, onDecision]);
     const handlePasteModified = useCallback(() => {
-        let modifiedText = originalText;
+        // 1. Convert string to character array for easy manipulation by index
+        const chars = originalText.split('');
+        
+        // 2. Iterate through the matches
+        // We don't need to sort anymore because the background script guarantees no overlaps.
         matches.forEach((match, index) => {
+            // 3. Check the toggle state using the loop index directly
             if (redactionState[index]) {
-                const escapedValue = match.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                modifiedText = modifiedText.replace(new RegExp(escapedValue, 'g'), match.dummyValue);
+                // 4. Overwrite the characters at the specific position
+                // Since Structural Redaction preserves length, this is safe and simple.
+                for (let k = 0; k < match.length; k++) {
+                    // Ensure we don't go out of bounds (safety check)
+                    if (match.index + k < chars.length) {
+                        chars[match.index + k] = match.dummyValue[k];
+                    }
+                }
             }
         });
-        onDecision('pasteModified', modifiedText);
+
+        // 5. Join back into a string
+        onDecision('pasteModified', chars.join(''));
     }, [originalText, matches, redactionState, onDecision]);
 
     useImperativeHandle(ref, () => ({
@@ -54,10 +73,10 @@ export const RedactionModal = forwardRef<RedactionModalRef, ModalProps>(
         <div className="fixed top-5 right-5 w-[400px]">
             <style>{modalStyles}</style>
 
-            <Card className="bg-slate-950 border-purple-500/30 text-white shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300 rounded-none">
+            <Card className="bg-slate-950 border-amber-500/30 text-white shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300 rounded-none">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <div className="flex items-center gap-3">
-                        <LogoIcon className="h-8 w-8 text-purple-400" />
+                        <LogoIcon className="h-8 w-8 text-amber-400" />
                         <h2 className="text-2xl font-semibold font-grotesque">Sensitive Data Detected</h2>
                     </div>
                     {/* The onClick handlers now correctly call the memoized callbacks */}
@@ -72,7 +91,7 @@ export const RedactionModal = forwardRef<RedactionModalRef, ModalProps>(
                             
                             {/* CHANGE 1: text-sm -> text-base, font-semibold -> font-bold, added mb-1 for spacing */}
                             <p className="font-bold text-base text-slate-100 font-grotesque mb-1">{match.name}</p>
-                            <code className="text-sm text-purple-200 bg-slate-950/80 px-2 py-1 rounded block truncate font-mono">
+                            <code className="text-sm text-amber-200 bg-slate-950/80 px-2 py-1 rounded block truncate font-mono">
                                 {match.value}
                             </code>
 
@@ -90,18 +109,18 @@ export const RedactionModal = forwardRef<RedactionModalRef, ModalProps>(
                             Cancel
                         </Button>
                         <div className="flex gap-2">
-                            <Button variant="outline" className="border-purple-500/50 text-purple-300 hover:bg-purple-900/30 hover:text-purple-200 rounded-full px-6 font-grotesque" onClick={handlePasteOriginal}>
+                            <Button variant="outline" className="border-amber-500/50 text-amber-300 hover:bg-amber-900/30 hover:text-amber-200 rounded-full px-6 font-grotesque" onClick={handlePasteOriginal}>
                                 Paste Original
                             </Button>
-                            <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6 font-grotesque" onClick={handlePasteModified}>
+                            <Button className="bg-amber-600 hover:bg-amber-700 text-white rounded-full px-6 font-grotesque" onClick={handlePasteModified}>
                                 Paste Redacted
                             </Button>
                         </div>
                     </div>
                     <div className="text-xs text-slate-500 flex items-center gap-2 font-grotesque">
                         <span>Hotkeys:</span>
-                        <kbd className="font-sans px-1.5 py-0.5 text-xs font-semibold text-slate-300 bg-purple-900/40 border border-purple-500/30 rounded-md font-grotesque">Alt + R</kbd> <span>Redact</span>
-                        <kbd className="font-sans px-1.5 py-0.5 text-xs font-semibold text-slate-300 bg-purple-900/40 border border-purple-500/30 rounded-md font-grotesque">Alt + O</kbd> <span>Original</span>
+                        <kbd className="font-sans px-1.5 py-0.5 text-xs font-semibold text-slate-300 bg-amber-900/40 border border-amber-500/30 rounded-md font-grotesque">Alt + R</kbd> <span>Redact</span>
+                        <kbd className="font-sans px-1.5 py-0.5 text-xs font-semibold text-slate-300 bg-amber-900/40 border border-amber-500/30 rounded-md font-grotesque">Alt + O</kbd> <span>Original</span>
                     </div>
                 </CardFooter>
             </Card>

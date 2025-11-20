@@ -3,7 +3,13 @@ import ReactDOM from 'react-dom/client';
 import { RedactionModal } from '../components/Modal';
 import type { RedactionModalRef } from '../components/Modal';
 
-type Match = { name: string; value: string; dummyValue: string; };
+type Match = { 
+    name: string; 
+    value: string; 
+    dummyValue: string;
+    index: number;   // <-- Add this
+    length: number;  // <-- Add this
+};
 
 const IframeApp = () => {
     // Create a ref to hold the instance of our modal component

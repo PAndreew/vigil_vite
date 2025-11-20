@@ -1,7 +1,17 @@
 console.log('[DLP Background] Rule-based Engine starting up.');
 
-type PiiRule = { name: string; regex: string; dummyValue: string; };
-type Finding = { name: string; value: string; dummyValue: string; };
+type PiiRule = {
+    name: string;
+    regex: string;
+};
+
+type Finding = {
+    name: string;
+    value: string;
+    dummyValue: string;
+    index: number;
+    length: number;
+};
 
 let piiRules: PiiRule[] = [];
 // 1. Create a promise variable to track loading state
@@ -23,6 +33,16 @@ async function loadRules() {
 
 // 2. Initialize the promise immediately
 rulesLoadedPromise = loadRules();
+
+
+// --- HELPER: Generate Redaction Dynamically ---
+function generateStructuralRedaction(text: string): string {
+    return text.split('').map(char => {
+        if (/[0-9]/.test(char)) return '0';
+        if (/[a-zA-Z]/.test(char)) return 'A'; // Using 'A' as requested
+        return char; // Keep -, ., @, spaces, etc.
+    }).join('');
+}
 
 // --- HELPER: Check Protected Domain ---
 function isDomainProtected(currentUrl: string, protectedList: string[]): boolean {
@@ -77,28 +97,74 @@ async function handleAnalysis(message: any, sender: chrome.runtime.MessageSender
 
 function findSensitiveData(text: string): Finding[] {
     const findings: Finding[] = [];
-    const matchedValues = new Set<string>();
+    
+    // 1. Create a "Mask" to track which characters are already claimed by a rule.
+    //    false = free, true = taken
+    const mask = new Array(text.length).fill(false);
 
-    // STAGE 1: Specific Rule Matching (for emails, phone numbers, etc.)
+    // Helper to check if a range is free
+    const isRangeFree = (start: number, end: number) => {
+        for (let i = start; i < end; i++) {
+            if (mask[i]) return false;
+        }
+        return true;
+    };
+
+    // Helper to mark a range as taken
+    const markRange = (start: number, end: number) => {
+        for (let i = start; i < end; i++) {
+            mask[i] = true;
+        }
+    };
+
+    // 2. Run Specific Rules (Higher Priority)
+    //    We assume piiRules are loaded. If not, this loop is skipped.
     for (const rule of piiRules) {
-        const regex = new RegExp(rule.regex, 'gi');
-        const matches = text.match(regex);
-        if (matches) {
-            for (const match of matches) {
-                if (!matchedValues.has(match)) {
-                    findings.push({ name: rule.name, value: match, dummyValue: rule.dummyValue });
-                    matchedValues.add(match);
+        try {
+            const regex = new RegExp(rule.regex, 'gi');
+            let match;
+            
+            // valid regex execution loop
+            while ((match = regex.exec(text)) !== null) {
+                const start = match.index;
+                const value = match[0];
+                const end = start + value.length;
+
+                // CHECK FOR OVERLAP
+                if (isRangeFree(start, end)) {
+                    markRange(start, end); // Claim these characters
+                    findings.push({
+                        name: rule.name,
+                        value: value,
+                        // GENERATE DYNAMIC REDACTION
+                        dummyValue: generateStructuralRedaction(value),
+                        index: start,
+                        length: value.length
+                    });
                 }
             }
+        } catch (e) {
+            console.error(`Error executing rule ${rule.name}`, e);
         }
     }
 
-    // STAGE 2: Improved Fallback Rule
+    // 3. Run Fallback Logic (Lowest Priority)
+    //    Only checks characters that haven't been claimed by specific rules.
     const FALLBACK_CONFIG = { minLength: 8 };
-    const words = text.split(/[\s\n\r\t,;()\[\]{}'"]+/);
+    
+    // We manually tokenize by splitting on whitespace/symbols to find "potential secrets"
+    // But we must map these tokens back to their original indices to check the mask.
+    const tokenRegex = /[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/g;
+    let tokenMatch;
 
-    for (const word of words) {
-        if (word.length < FALLBACK_CONFIG.minLength || matchedValues.has(word)) {
+    while ((tokenMatch = tokenRegex.exec(text)) !== null) {
+        const word = tokenMatch[0];
+        const start = tokenMatch.index;
+        const end = start + word.length;
+
+        // Skip if too short or if ANY part of this word is already redacted
+        // (e.g. if a word is "user:password", and "password" was caught by a rule, ignore the whole token to avoid partial messy redacts)
+        if (word.length < FALLBACK_CONFIG.minLength || !isRangeFree(start, end)) {
             continue;
         }
 
@@ -106,19 +172,17 @@ function findSensitiveData(text: string): Finding[] {
         const hasLetter = /[a-zA-Z]/.test(word);
         const hasSpecialChar = /[^a-zA-Z0-9]/.test(word);
 
-        // =================================================================
-        // "CRUDE RULE" logic.
-        // It checks for (letters + numbers) OR (special chars + numbers).
-        // This will correctly identify API keys, passwords, etc.
-        // =================================================================
         if ((hasLetter && hasNumber) || (hasSpecialChar && hasNumber)) {
+            markRange(start, end);
             findings.push({
-                name: 'Other Potential Sensitive Data',
+                name: 'Potential Sensitive ID',
                 value: word,
-                dummyValue: '[REDACTED]'
+                dummyValue: generateStructuralRedaction(word),
+                index: start,
+                length: word.length
             });
-            matchedValues.add(word);
         }
     }
+
     return findings;
 }
